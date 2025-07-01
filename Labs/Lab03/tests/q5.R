@@ -15,7 +15,7 @@ test = list(
           prod(dim(X1) == c(428, 1)) == 1
         )
         testthat::expect_true(
-          round(X1[7, 1],6) == 0.033753
+          round(X1[7, 1],6) == -6.655684
         )
       }
     )
