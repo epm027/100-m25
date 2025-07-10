@@ -1,0 +1,384 @@
+---
+title: "Lab 05: The Count of Monte Carlo"
+subtitle: "PSTAT 100, Summer Session A 2025 with Ethan P. Marzban"
+author:
+  - MEMBER 1 (NetID 1)
+  - MEMBER 2 (NetID 2)
+  - MEMBER 3 (NetID 3)
+date: "July 10, 2025"
+date-format: long
+format: 
+  pdf:
+    mathspec: true
+    header-includes:
+      - \usepackage[margin = 0.9in, 
+                    top = 0.8in, 
+                    bottom = 1.1in]{geometry}
+      - \usepackage[headsepline]{scrlayer-scrpage}
+      - \usepackage{dsfont}
+      - \lohead{PSTAT 100, Summer Session A 2025}
+      - \cohead{ \ Lab05 }
+      - \rohead{\copyright Ethan P. Marzban}
+      - \newcommand{\mat}[1]{\mathbf{#1}}
+      - \newcommand{\tmat}[1]{\mathbf{#1}^{\mathsf{T}}}
+      - \newcommand{\vect}[1]{\vec{\boldsymbol{#1}}}
+      - \newcommand{\tvect}[1]{\vec{\boldsymbol{#1}}^{\masthf{T}}}
+      - \newcommand{\E}{\mathds{E}}
+      - \newcommand{\Prob}{\mathds{P}}
+---
+
+```{r setup, echo = F}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = F}
+## optional code chunk;
+## gives shortcut for boldface colored text,
+## able to be rendered in both PDF and HTML
+
+bfcolor <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{\\textbf{%s}}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'><b>%s</b></span>", color, x)
+  } else x
+}
+```
+
+
+# Required Packages
+
+```{r, message = F, warning = F}
+library(ottr)        # for checking test cases (i.e. autograding)
+library(pander)      # for nicer-looking formatting of dataframe outputs
+library(tidyverse)   # for graphs, data wrangling, etc.
+```
+
+
+# Logistical Details
+
+:::{.callout-note}
+## **Logistical Details**
+
+-   This lab is due by **11:59pm on Friday, July 11, 2025**.
+
+-   Collaboration is allowed, and encouraged!
+    -   If you work in groups, list ALL of your group members' names and NetIDs (not Perm Numbers) in the appropriate spaces in the YAML header above.
+    -   Please delete any "MEMBER X" lines in the YAML header that are not needed.
+    -   No more than 3 people in a group, please.
+    
+-   Ensure your Lab properly renders to a `.pdf`; non-`.pdf` submissions will not be graded and will receive a score of 0.
+
+-   Ensure all test cases pass (test cases that have passed will display a message stating `"All tests passed!"`)
+:::
+
+# Lab Overview and Objectives
+
+Welcome to another PSTAT 100 Lab! In this lab, we will cover the following:
+
+-   Inversion sampling
+-   Basic Monte Carlo methods
+
+# Part I: Sampling from Distributions
+
+By now, you've hopefully realized that simulating samples from a given distribution is an incredibly useful tool. Up until now, we've been accomplishing this type of sampling using built-in `R` functions; for example, to sample from the Exponential distribution, we used `rexp()`. Sometimes it becomes useful or necessary to sample from distributions that _don't_ have built-in `R` functions. 
+
+In general, generating such "nonstandard" samples is quite involved, and encompases an active area of research. There is, however, one particularly useful result that we will make use of in this lab, called the **Probability Integral Transform**:
+
+::: {.callout-tip}
+## **Probability Integral Transform**
+
+Let $X$ be a random variable that follows a distribution with CDF $F_X(\cdot)$. Then the random variable $U := F_X(X)$ follows a Uniform distribution on the interval [0, 1].
+:::
+
+The proof of this, though quite straightforward, is out-of-scope for PSTAT 100. For now, we'll simply leverage this result to note that we can generate samples from an arbitrary distribution with CDF $F_X(x)$ by:
+
+1)    Taking a sample from the Uniform[0, 1] distribution, using `runif()`,
+2)    Applying the inverse CDF $F_X^{-1}()$ to our sampled values.
+
+Such a sampling scheme is often called **inversion sampling**, for its use of the _inverse_ CDF (which we often call the **quantile function** of a distribution). 
+
+As a simple example of inversion sampling, let's generate a sample from the Exponential distribution. We know, from PSTAT 120A, that if $X \sim \mathrm{Exp}(\lambda)$ (where this notation means $\E[X] = (1/\lambda)$), the CDF of $X$ is given by
+$$ F_X(x) = \begin{cases} 1 - e^{-\lambda x} & \text{if } x \geq 0 \\ 0 & \text{otherwise} \\ \end{cases} $$
+and the associated quantile function is given by
+$$ F_X^{-1}(p) = -\frac{1}{\lambda} \ln(1 - p) $$
+Therefore, a sample from the Exp(2) distribtuion can be obtained using:
+
+```{r}
+set.seed(100)
+U <- runif(1000)
+X <- (-1/2) * log(1 - U)
+```
+
+To confirm that `X` follows an Exponential distribution with rate 2, we can use a **QQ-Plot**:
+
+```{r}
+#| fig-height: 2.5
+
+data.frame(X) %>% ggplot(aes(sample = X)) +
+  geom_qq(distribution = stats::qexp, dparams = list(rate = 2)) +
+  geom_qq_line(distribution = stats::qexp, dparams = list(rate = 2),
+               color = "blue", linewidth = 1.25) + 
+  theme_minimal(base_size = 12) + 
+    xlab("theoretical") + ylab("sample") +
+    ggtitle("Exp(2) QQ-Plot of Sampled Values")
+```
+
+\
+
+Over the next few questions, we'll develop a function to generate samples from the distribution with probability density function given by 
+\begin{equation}{\label{eq:density1}
+  f_X(x) = \begin{cases} (x/2) & \text{if } 0 \leq x \leq 2 \\ 0 & \text{otherwise} \\ \end{cases}
+}\end{equation}
+Keep in mind that you may need to do some scratch work (Calculus) on the side, before coding!
+
+\
+
+:::{.callout-important}
+## **Question 1**
+
+Write a function `pdist1()` that takes in a single argument `x` and returns the CDF of the distribution with density given by (\ref{eq:density1}) at `x`. Make sure your function is vectorized: as a hint, consider using the `Vectorize()` function in `R`. \
+
+`r bfcolor("Solution:", "blue")`
+
+```{r}
+## replace this line with your code
+```
+
+`r bfcolor("Answer Check:", "blue")`
+```{r, message = F}
+# DO NOT EDIT THIS LINE
+invisible({check("tests/q1.R")})
+```
+
+:::
+
+
+\
+
+
+:::{.callout-important}
+## **Question 2**
+
+Write a function `qdist1()` that takes in a single argument `p` and returns the quantile function (i.e. the inverse CDF) of the distribution with density given by (\ref{eq:density1}) at `x`. Make sure your function is vectorized: as a hint, consider using the `Vectorize()` function in `R`. \
+
+**IMPORTANT:** Due to a quirk in `R`, you need to make sure the argument for your function is called `p`, and not a different letter so that we can use this function in Question 3 below. \
+
+`r bfcolor("Solution:", "blue")`
+
+```{r}
+## replace this line with your code
+```
+
+`r bfcolor("Answer Check:", "blue")`
+```{r, message = F}
+# DO NOT EDIT THIS LINE
+invisible({check("tests/q2.R")})
+```
+
+:::
+
+\
+
+
+:::{.callout-important}
+## **Question 3**
+
+Write a function `rdist1()` that takes in a single argument `n` and returns a sample of size _n_ from the distribution with density given by (\ref{eq:density1}) at `x`. \
+
+Then, use your `rdist1()` function to generate a sample of size 1000 from the distribution with density given by (\ref{eq:density1}), and plot a QQ-plot comparing the quantiles of this sample to those given by the density. As a hint: copy-paste the code used to generate a QQ-plot above, change the `distribution` argument, and remove the parameter specifications. \
+
+`r bfcolor("Solution:", "blue")`
+
+```{r}
+## replace this line with your code
+```
+
+`r bfcolor("Answer Check:", "blue")`
+
+There is no autograder for this question; your TA will manually check that your answers are correct.
+
+:::
+
+# Part II: Monte Carlo Methods
+
+In lecture, we were introduced to the notion of **Monte Carlo Methods**. Generally speaking, Monte Carlo methods are those that utilize _stochastic_ (random/probabilistic) methods to estimate _deterministic_ quantities. 
+
+Here is the general idea. Suppose we wish to evaluate
+$$ I := \int_{a}^{b} g(x) \ \mathrm{d}x $$
+for some function $g(x)$. Further suppose that $g(\cdot)$ is such that computing $I$ analytically is intractable. The key is to note that
+$$ I = \int_{a}^{b} g(x) (b - a) \cdot \frac{1}{b - a } \ \mathrm{d}x $$
+which can be written as $\E[g(X)(b - a)]$ for $X \sim \mathrm{Unif}[0, 1]$. So, to estimate $I$, we can:
+
+1)    Take a large sample $X$ from the Uniform$[a, b]$ distribution
+2)    Apply $g(\cdot)$ to each element and multiply by $(b - a)$, then take the mean of the resulting values
+
+For example, suppose we wish to evaluate
+$$ I_1 = \int_{0}^{1} e^{-x^2/2} \ \mathrm{d}x $$
+Note that $I_1$ doesn't even admit a closed-form solution, because $g(x) = e^{-x^2/2}$ does not have an elementary antiderivative. However, to obtain an approximation to $I_1$, we can:
+
+1)    Generate a large sample from the Unif[0, 1] distribution
+2)    Compute $e^{-x^2/2}$ for each $x$ from our sample in step (1), and take the sample average of the resulting values
+
+```{r}
+set.seed(100)      ## for reproducibility purposes
+U <- runif(5000)   ## take a sample from the Unif[0, 1] distribution
+mean(exp(-U^2 / 2))    ## take the mean of e^(-U^2 / 2)
+```
+
+We can compare this to the "analytic" answer obtained by `R`:
+
+```{r}
+integrate(\(x){exp(-x^2 / 2)}, 0, 1)
+```
+
+
+:::{.callout-important}
+## **Question 4**
+
+Consider the integral
+$$ I_2 := \int_{0}^{2} x^2 \ \mathrm{d}x $$
+Though this is a relatively simple integral to compute analytically, let's obtain an approximation using Monte Carlo methods.
+
+1)    Generate a sample of size 5000 from the Unif[0, 2] distribution;
+
+2)    Use this sample to compute a Monte Carlo estimate for $I_2$.
+
+As a hint:
+$$ I_2 = \int_{0}^{2} x^2 \ \mathrm{d}x = \int_{0}^{2} (2 x^2) \cdot \frac{1}{2 - 0} \ \mathrm{d}x $$
+
+`r bfcolor("Solution:", "blue")`
+
+```{r}
+## replace this line with your code
+```
+
+`r bfcolor("Answer Check:", "blue")`
+
+There is no autograder for this question; your TA will manually check that your answers are correct.
+
+:::
+
+We do not have to limit ourselves to using the Uniform distribution in Monte Carlo simulations!
+
+:::{.callout-important}
+## **Question 5**
+
+Consider the integral
+$$ I_3 := \int_{0}^{2} x \cos(x) \ \mathrm{d}x $$
+Though this is a relatively simple integral to compute analytically, let's obtain an approximation using Monte Carlo methods.
+
+1)    Use your `rdist1()` function from Question 3 above to generate a sample of size 5000 from the distribution with density given by (\ref{eq:density1})
+
+2)    Use this sample to compute a Monte Carlo estimate for $I_3$.
+
+As a hint:
+$$ I_3 = \int_{0}^{2} x \cos(x) \ \mathrm{d}x = \int_{0}^{2} \left[ 2 \cos(x) \right] \cdot \frac{x}{2} \ \mathrm{d}x $$
+
+`r bfcolor("Solution:", "blue")`
+
+```{r}
+## replace this line with your code
+```
+
+`r bfcolor("Answer Check:", "blue")`
+
+There is no autograder for this question; your TA will manually check that your answers are correct.
+
+:::
+
+
+Finally, allow me to point out that Monte Carlo simulations work for integrals other than expectations as well. For example, let us return to $I_1$ above. Note that, if $X \sim \mathcal{N}(0, 1)$, then
+$$ I_1 := \int_{0}^{1} e^{-x^2 / 2} \ \mathrm{d}x = \sqrt{2\pi} \cdot  \int_{0}^{1} \frac{1}{\sqrt{2\pi}} e^{-x^2 / 2} \ \mathrm{d}x = \sqrt{2\pi} \cdot \Prob(0 \leq X \leq 1) $$
+
+This reveals an alternate way to estimate $I_1$:
+
+1)    Generate a large sample from the $\mathcal{N}(0, 1)$ distribution
+
+2)    Compute the sample _proportion_ of values that are between 0 and 1, and multiply the result by $\sqrt{2 \pi}$.
+
+```{r}
+set.seed(100)
+X <- rnorm(10e5)
+sqrt(2 * pi) * ifelse((X >= 0) & (X <= 1), 1, 0) %>% mean()
+```
+
+::: {.callout-caution}
+## **Caution**
+
+Note that, in this second method, we needed to take a much larger sample than using the first method.
+:::
+
+:::{.callout-important}
+## **Question 6**
+
+Consider the integral
+$$ I_4 := \int_{0.5}^{1.5}  \frac{x}{2} \ \mathrm{d}x $$
+Obtain a Monte Carlo estimate for $I_4$ by generating a large sample from the distribution with density given by (\ref{eq:density1}), and computing the proportion of values between 0.5 and 1.5. Use your `rdist1()` function from Question 3! \
+
+`r bfcolor("Solution:", "blue")`
+
+```{r}
+## replace this line with your code
+```
+
+`r bfcolor("Answer Check:", "blue")`
+
+There is no autograder for this question; your TA will manually check that your answers are correct.
+
+:::
+
+Now, one of the hallmarks of Monte Carlo estimation is its use of _randomness_. This means that the estimates produced by Monte Carlo methods are themselves random, and should follow some distribution. Let's investigate this distribution!
+
+
+:::{.callout-important}
+## **Question 7**
+
+Return to $I_3$ above. Replicate your steps in Question 5 to obtain 1000 different Monte Carlo estimates of $I_3$ (each computed from a sample of size 5000 drawn from the distribution with density (\ref{eq:density1})). Plot the histogram of these estimates. \
+
+`r bfcolor("Solution:", "blue")`
+
+```{r}
+## replace this line with your code
+```
+
+`r bfcolor("Answer Check:", "blue")`
+
+There is no autograder for this question; your TA will manually check that your answers are correct.
+
+:::
+
+:::{.callout-important}
+## **Question 8**
+
+Based on your histogram from Question 7 above, what distribution do you think the Monte Carlo estimates follow? Confirm your answer using a QQ-plot.  \
+
+`r bfcolor("Solution:", "blue")`
+
+_Replace this line with your answer_ \
+
+```{r}
+## replace this line with your code
+```
+
+`r bfcolor("Answer Check:", "blue")`
+
+There is no autograder for this question; your TA will manually check that your answers are correct.
+
+:::
+
+# Submission Details
+
+Congrats on finishing this PSTAT 100 lab! Please carry out the following steps:
+
+:::{.callout-note}
+## **Submission Details**
+
+1)    Check that all of your tables, plots, and code outputs are rendering correctly in your final `.pdf`.
+
+2)    Check that you passed all of the test cases (on questions that have autograders). You'll know that you passed all tests for a particular problem when you get the message "All tests passed!".
+
+3)    Submit **ONLY** your `.pdf` to Gradescope. Make sure to **match ALL pages to the ONE question on Gradescope**; failure to do so will incur a penalty of 0.1 points.
+:::
+
+
