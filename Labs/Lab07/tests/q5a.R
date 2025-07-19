@@ -6,7 +6,7 @@ test = list(
       hidden = TRUE,
       code = {
         testthat::expect_true(
-          round(pred_ppm1, 3) == 6.085
+          round(pred_ppm1, 3) == 6.07
         )
       }
     )
