@@ -1,0 +1,287 @@
+---
+title: "Lab 10: Lab-ubu"
+subtitle: "PSTAT 100, Summer Session A 2025 with Ethan P. Marzban"
+author:
+  - MEMBER 1 (NetID 1)
+  - MEMBER 2 (NetID 2)
+  - MEMBER 3 (NetID 3)
+date: "July 24, 2025"
+date-format: long
+format: 
+  pdf:
+    mathspec: true
+    header-includes:
+      - \usepackage[margin = 0.9in, 
+                    top = 0.8in, 
+                    bottom = 1.1in]{geometry}
+      - \usepackage[headsepline]{scrlayer-scrpage}
+      - \lohead{PSTAT 100, Summer Session A 2025}
+      - \cohead{ \ Lab10}
+      - \rohead{\copyright Ethan P. Marzban}
+      - \newcommand{\mat}[1]{\mathbf{#1}}
+      - \newcommand{\tmat}[1]{\mathbf{#1}^{\mathsf{T}}}
+      - \newcommand{\vect}[1]{\vec{\boldsymbol{#1}}}
+      - \newcommand{\tvect}[1]{\vec{\boldsymbol{#1}}^{\masthf{T}}}
+---
+
+```{r setup, echo = F}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = F}
+## optional code chunk;
+## gives shortcut for boldface colored text,
+## able to be rendered in both PDF and HTML
+
+bfcolor <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{\\textbf{%s}}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'><b>%s</b></span>", color, x)
+  } else x
+}
+```
+
+
+# Required Packages
+
+```{r, message = F, warning = F}
+library(ottr)        # for checking test cases (i.e. autograding)
+library(pander)      # for nicer-looking formatting of dataframe outputs
+library(tidyverse)   # for graphs, data wrangling, etc.
+```
+
+
+# Logistical Details
+
+:::{.callout-note}
+## **Logistical Details**
+
+-   This lab is due by **11:59pm on Wednesday, July 30, 2025**.
+
+-   Collaboration is allowed, and encouraged!
+    -   If you work in groups, list ALL of your group members' names and NetIDs (not Perm Numbers) in the appropriate spaces in the YAML header above.
+    -   Please delete any "MEMBER X" lines in the YAML header that are not needed.
+    -   No more than 3 people in a group, please.
+    
+-   Ensure your Lab properly renders to a `.pdf`; non-`.pdf` submissions will not be graded and will receive a score of 0.
+
+-   Ensure all test cases pass (test cases that have passed will display a message stating `"All tests passed!"`)
+:::
+
+# Lab Overview and Objectives
+
+Welcome to another PSTAT 100 Lab! In this lab, we will cover the following:
+
+-   Clustering in `R`
+-   Missing Data
+
+
+# Part I: Clustering
+
+_**Labubus**_ are a moderately-sized plush doll that has completely taken the online market recently. If you'd like to read more about the history of Labubus, feel free to consult [This NPR Article](https://www.npr.org/2025/06/18/g-s1-72939/what-is-labubu-pop-mart-explained). 
+
+For the purposes of this lab, we'll explore a simulated dataset pertaining to _Labubus_. Specifically, we are imagining that someone has collectd 61 labubus and recorded the following attributes:
+
+-   The height of the _Labubu_ (in centimeters)
+-   The weight of the _Labubu_ (in grams)
+-   The `RBG` color specification of the _Labubu_ (split across three columns; one for `R`, one for `G`, and one for `B`)
+
+Additionally, it is known that each _Labubu_ falls into one of six styles: Soymilk (`SM`), Lychee Berry (`LB`), Green Grape (`GG`), Sea Salt Coconut (`SSC`), Toffee (`T`), and Sesame Bean (`SB`) (names taken from [this](https://www.popmart.com/us/products/675/the-monsters-exciting-macaron-vinyl-face-blind-box) listing). 
+
+The full _Labubu_ dataset can be found in the `labubu.csv` file, located in the `data/` subfolder.
+
+```{r}
+labubu <- read.csv("data/labubu.csv")
+```
+
+\
+
+:::{.callout-important}
+## **Question 1**
+
+Create a data frame called `labubu_num` that contains only the numerical columns from the `labubu` dataset. \
+
+`r bfcolor("Solution:", "blue")`
+
+```{r}
+## replace this line with your code
+```
+
+`r bfcolor("Answer Check:", "blue")`
+```{r, message = F}
+# DO NOT EDIT THIS LINE
+invisible({check("tests/q1.R")})
+```
+
+:::
+
+\
+
+Let's see what happens if we try to visually classify based on only two variables. \
+
+:::{.callout-important}
+## **Question 2**
+
+Generate a scatterplot of the Labubus' heights (on the vertical axis) against their weights (on the horizontal) axis. Ensure your plot is presentation-quality. How many clusters do you see on the plot? **Don't** rely on the `type` column from the `labubu` dataframe - only use the plot you just generated! \
+
+`r bfcolor("Solution:", "blue")`
+
+```{r}
+## replace this line with your code
+```
+
+_Replace this line with your answer_ \
+
+`r bfcolor("Answer Check:", "blue")`
+
+There is no autograder for this question; your TA will manually check that your answers are correct.
+
+:::
+
+Hm, our number of clusters doesn't appear to agree with the number of different _Labubu_ types we know to be present in the dataset. This _could_ mean that two or more of the _Labubu_ types are very similar to one another - however, it's dangerous to make that conclusion based solely on our work in Question 2 since we ignored several variables from the dataset. Let's remedy that!
+
+\
+
+
+:::{.callout-important}
+## **Question 3**
+
+Perform PCA on the `labubu_num` dataframe, taking care to _standardize_ (not only mean-center) each column. Then, use this to generate a plot of the first two latent factors; how many clusters do you see on this PC plot? \
+
+`r bfcolor("Solution:", "blue")`
+
+```{r}
+## replace this line with your code
+```
+
+_Replace this line with your answer_ \
+
+`r bfcolor("Answer Check:", "blue")`
+
+There is no autograder for this question; your TA will manually check that your answers are correct.
+
+:::
+
+\
+
+Wow- the clusters on this graph are pretty distinct! Nevertheless, let's run a _K_-means clustering algorithm on our PC-projected dataset. As a reminder, in `R` we use the `kmeans()` function to run the _K_-means clustering algorithm; take a look at the help file for this function before moving onto the next question on this lab.  \
+
+:::{.callout-important}
+## **Question 4**
+
+**Part (a)**
+
+Pass the matrix of the first two PCs into a call to `kmeans()`, and assign the result to a variable called `kmeans_labubu`. Use 6 clusters. **Make sure to set your seed to 100 before beginning; otherwise the autograder may not work.** \
+
+`r bfcolor("Solution:", "blue")`
+
+```{r}
+set.seed(100)
+## replace this line with your code
+```
+
+
+`r bfcolor("Answer Check:", "blue")`
+
+```{r, message = F}
+# DO NOT EDIT THIS LINE
+invisible({check("tests/q4a.R")})
+```
+
+\
+
+**Part (b)**
+
+Re-do the PC plot from Question 3, now coloring based on the clusters identified by `kmeans()`.
+
+
+```{r}
+## replace this line with your code
+```
+
+`r bfcolor("Answer Check:", "blue")`
+
+There is no autograder for this question; your TA will manually check that your answers are correct.
+
+:::
+
+Assuming you correctly completed the questions above, the following code should produce a cross-tabulation of each _Labubu_'s classification (as determined by _K_-means) and its true type (as classified by the `type` variable from the original `labubu` dataframe):
+
+```{r}
+#| echo: True
+#| error: True
+#| message: False
+
+labubu %>%
+  mutate(class = kmeans_labubu$cluster) %>%
+  group_by(type, class) %>%
+  summarise(count = n()) %>%
+  pivot_wider(names_from = type,
+              values_from = count,
+              values_fill = 0) %>%
+  pander()
+```
+
+
+:::{.callout-important}
+## **Question 5**
+
+Has _K_-means classified along the different types, as encoded by the `type` variable in the original `labubu` dataframe? Are there any two _Labubu_ types that are so similar to each other that they are indistinguishable (by _K_-means) from one another? How can you tell?  \
+
+`r bfcolor("Solution:", "blue")`
+
+_Replace this line with your answer_ \
+
+
+`r bfcolor("Answer Check:", "blue")`
+
+There is no autograder for this question; your TA will manually check that your answers are correct.
+
+:::
+
+
+\
+
+Something that is important to note is that there is a bit of randomness in the _K_-means algorithm. As such, let's see how this manifests itself in this particular dataset.
+
+
+:::{.callout-important}
+## **Question 6**
+
+Re-run the _K_-means clustering algorithm, but this time **set your seed to 20 at the start**. Produce a plot like you did in Question 4(b), coloring points by the _new_ classifications. Comment on any differences between this plot and the plot from 4(b) above. \
+
+
+```{r}
+set.seed(20)
+## replace this line with your code
+```
+
+_Replace this line with your answer_ \
+
+`r bfcolor("Answer Check:", "blue")`
+
+There is no autograder for this question; your TA will manually check that your answers are correct.
+
+:::
+
+\
+
+So, there is some variability in the product of the _K_-means clustering algorithm. Again, recall that the _K_-means algorithm is only optimal in a local sense - in some cases (like with this particular simulated _Labubu_ dataset), the final configurations may be dependent on the seed you set initially. 
+
+
+# Submission Details
+
+Congrats on finishing this PSTAT 100 lab! Please carry out the following steps:
+
+:::{.callout-note}
+## **Submission Details**
+
+1)    Check that all of your tables, plots, and code outputs are rendering correctly in your final `.pdf`.
+
+2)    Check that you passed all of the test cases (on questions that have autograders). You'll know that you passed all tests for a particular problem when you get the message "All tests passed!".
+
+3)    Submit **ONLY** your `.pdf` to Gradescope. Make sure to **match ALL pages to the ONE question on Gradescope**; failure to do so will incur a penalty of 0.1 points.
+:::
+
+
