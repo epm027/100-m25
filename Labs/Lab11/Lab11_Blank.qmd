@@ -1,0 +1,313 @@
+---
+title: "Lab 11: COMPAS Case Study"
+subtitle: "PSTAT 100, Summer Session A 2025 with Ethan P. Marzban"
+author:
+  - MEMBER 1 (NetID 1)
+  - MEMBER 2 (NetID 2)
+  - MEMBER 3 (NetID 3)
+date: "July 31, 2025"
+date-format: long
+format: 
+  pdf:
+    mathspec: true
+    header-includes:
+      - \usepackage[margin = 0.9in, 
+                    top = 0.8in, 
+                    bottom = 1.1in]{geometry}
+      - \usepackage[headsepline]{scrlayer-scrpage}
+      - \lohead{PSTAT 100, Summer Session A 2025}
+      - \cohead{ \ Lab11 }
+      - \rohead{\copyright Ethan P. Marzban}
+      - \newcommand{\mat}[1]{\mathbf{#1}}
+      - \newcommand{\tmat}[1]{\mathbf{#1}^{\mathsf{T}}}
+      - \newcommand{\vect}[1]{\vec{\boldsymbol{#1}}}
+      - \newcommand{\tvect}[1]{\vec{\boldsymbol{#1}}^{\masthf{T}}}
+---
+
+```{r setup, echo = F}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = F}
+## optional code chunk;
+## gives shortcut for boldface colored text,
+## able to be rendered in both PDF and HTML
+
+bfcolor <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{\\textbf{%s}}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'><b>%s</b></span>", color, x)
+  } else x
+}
+```
+
+
+# Required Packages
+
+```{r, message = F, warning = F}
+library(ottr)        # for checking test cases (i.e. autograding)
+library(pander)      # for nicer-looking formatting of dataframe outputs
+library(tidyverse)   # for graphs, data wrangling, etc.
+```
+
+
+# Logistical Details
+
+:::{.callout-note}
+## **Logistical Details**
+
+-   This lab is due by **11:59pm on Friday, August 1, 2025**.
+
+-   Kindly note that there will be **NO LATE SUBMISSION PERIOD** for this lab, as the quarter ends at 11:59pm on Friday August 1.
+
+-   Collaboration is allowed, and encouraged!
+    -   If you work in groups, list ALL of your group members' names and NetIDs (not Perm Numbers) in the appropriate spaces in the YAML header above.
+    -   Please delete any "MEMBER X" lines in the YAML header that are not needed.
+    -   No more than 3 people in a group, please.
+    
+-   Ensure your Lab properly renders to a `.pdf`; non-`.pdf` submissions will not be graded and will receive a score of 0.
+:::
+
+# Lab Overview and Objectives
+
+Welcome to this final (and bonus) PSTAT 100 Lab! As a reminder, you are not required to submit this lab if you are satisfied with your grades on Labs 1 through 10; however, if you do submit this lab your score on this lab will replace your lowest Lab score from the quarter. 
+
+This lab is structured differently from the previous labs in this course, as we will be examining an already-conducted Case Study. My main goals for you in this lab are to:
+
+-   Read through a very well-crafted analysis report
+-   Become aware of ways in which bias can appear in machine learning algorithms
+-   Familiarize yourself with a landmark case study from statistics/data science.
+
+
+# Part 0: Introduction
+
+This lab continues our discussion on the _ProPublica_ report written about the COMPAS (Correctional Offender Management Profiling for Alternative Sanctions) algorithm. The main article can be accessed [here](https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing). 
+
+As a reminder, the COMPAS Algorithm (developed by _Northpointe_, now called _Equivant_) is an algorithm designed to predict an individual's change of **recidivism** (committing a subsequent crime after having been arrested). Through careful analysis, _ProPublica_ identified evidence of serious racial bias in the algorithm. Specifically, the authors found that the COMPAS algorithm predicted disproportionately high recidivism rates for black individuals as compared to their white counterparts; similarly, the algorithm predicted disproportionately low recidivism rates for white individuals as compared to their black counterparts. 
+
+In lecture, we didn't have time to go through much of the authors' analysis. I did mention, however, that the authors published a follow-up article detailing the statistical methodologies they used in their study. It is this follow-up report that will form the backbone of today's lab.
+
+# Part I: Understanding Decisions
+
+::: {.callout-important}
+## **Action Item**
+
+Read through the report located at [https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm](https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm) **fully**, then answer the questions below. \
+
+Note that there are "correct" answers, in the sense that answers to these questions can be found directly from the report.
+:::
+
+\
+
+**Why do the authors claim they chose to analyze the COMPAS algorithm specifically?**
+
+::: {.callout-note}
+## **Answers to the Question Above**
+
+_Replace this line with your answers_
+:::
+
+\
+
+**Describe the COMPAS rating system. Specifically, what does the algorithm output? How does this tie in with the classification of individuals as having "Low", "Medium", or "High" risks of recidivism?**
+
+::: {.callout-note}
+## **Answers to the Question Above**
+
+_Replace this line with your answers_
+:::
+
+\
+
+**The authors point out that there are some difficulties in concretely defining "recidivism." Specifically, individuals may be arrested twice but for different crimes/reasons. How do the authors reconcile this? More broadly, how to the authors define recidivism? Be specific.**
+
+
+::: {.callout-note}
+## **Answers to the Question Above**
+
+_Replace this line with your answers_
+:::
+
+\
+
+
+**The COMPAS algorithm produces a rating in each of three categories: "Risk of Recidivism", "Risk of Violent Recidivism", and "Risk of Failure to Appear". Which of these three categories was excluded from _ProPublica_'s analysis?**
+
+
+::: {.callout-note}
+## **Answers to the Question Above**
+
+_Replace this line with your answers_
+:::
+
+\
+
+
+
+
+**In the section titled "How We Acquired the Data," the authors describe the process they used to "[match] criminal records to COMPAS records." This is likely the result of a join, like those we discussed on Lab 02. Which type (or types) of join do you think the authors used? What was the `join_by` key?**
+
+
+::: {.callout-note}
+## **Answers to the Question Above**
+
+_Replace this line with your answers_
+:::
+
+\
+
+# Part II: Analysis
+
+In this section, we'll dive a little deeper into _ProPublica_'s analysis. Specifically, we are going to focus on the first **logistic regression** fit in the section titled "Analysis". 
+
+_ProPublica_ has, very helpfully, provided public access to their data. I am including a `.csv` file in our `data/` subfolder, however I encourage you to read through the source GitHub page, at [https://github.com/propublica/compas-analysis](https://github.com/propublica/compas-analysis). \
+
+::: {.callout-important}
+## **Action Item 1**
+
+Load in the data, and assign it to a data frame called `compas`.
+
+```{r}
+## replace this line with your code
+```
+:::
+
+\
+
+::: {.callout-important}
+## **Action Item 2**
+
+Based on the categorization of `age` in the dataset and the regression table provided in the report (titled "Risk of General Recidivism Logistic Model"), which `age_cat` level is being used as the baseline? (**Yes, there is a correct answer; yes, you can tell from the regression table!**)
+
+```{r}
+## replace this line with your code
+```
+
+_Replace this line with your answers_
+
+:::
+
+\
+
+
+::: {.callout-important}
+## **Action Item 3**
+
+Based on the categorization of `age` in the dataset and the regression table provided in the report (titled "Risk of General Recidivism Logistic Model"), which `age_cat` level is being used as the baseline? (**Yes, there is a correct answer; yes, you can tell from the regression table!**)
+
+```{r}
+## replace this line with your code
+```
+:::
+
+
+The authors have also very helpfully provided _all of their source code_ on the aforementioned GitHub repository. Below is a direct copy of their code (with some minor formatting changes; all rights remain with the authors):
+
+```{r}
+#| code-line-numbers: true
+#| eval: False
+
+df <- mutate(df, crime_factor = factor(c_charge_degree)) %>%
+      mutate(age_factor = as.factor(age_cat)) %>%
+      within(age_factor <- relevel(age_factor, ref = 1)) %>%
+      mutate(race_factor = factor(race,
+                                  labels = c("African-American", 
+                                             "Asian",
+                                             "Caucasian", 
+                                             "Hispanic", 
+                                             "Native American",
+                                             "Other"))) %>%
+      within(race_factor <- relevel(race_factor, ref = 3)) %>%
+      mutate(gender_factor = factor(sex, labels= c("Female","Male"))) %>%
+      within(gender_factor <- relevel(gender_factor, ref = 2)) %>%
+      mutate(score_factor = factor(v_score_text != "Low", 
+                                   labels = c("LowScore","HighScore")))
+model <- glm(score_factor ~ gender_factor + age_factor + race_factor +
+                            priors_count + crime_factor + two_year_recid, 
+             family="binomial", data=df)
+summary(model)
+```
+
+One thing to note is that the object `df` has been assigned the full dataset (what we are calling `compas` in this lab). \
+
+
+::: {.callout-important}
+## **Action Item 4**
+
+Provide a line-by-line description of the code above. That is, using **words**, describe what each line of code is doing. The main moral here is that, from our accrued PSTAT 100 knowledge, we actually have enough know-how to understand every line!
+
+
+1)  _Replace this line with your text_
+2)  _Replace this line with your text_
+3)  _Replace this line with your text_
+4)  _Replace this line with your text_
+5)  _Replace this line with your text_
+6)  _Replace this line with your text_
+7)  _Replace this line with your text_
+8)  _Replace this line with your text_
+9)  _Replace this line with your text_
+10)  _Replace this line with your text_
+11)  _Replace this line with your text_
+12)  _Replace this line with your text_
+13)  _Replace this line with your text_
+14)  _Replace this line with your text_
+15)  _Replace this line with your text_
+16)  _Replace this line with your text_
+17)  _Replace this line with your text_
+18)  _Replace this line with your text_
+19)  _Replace this line with your text_
+
+
+:::
+
+
+::: {.callout-important}
+## **Action Item 5**
+
+You may notice that each recidivism score is classified as one of _three_ categories ("Low", "Medium", "High"), yet we fit a _logistic_ regression (which assumes a binary output). This is because two levels were combined into a single level - which two are these, and why did the authors choose to combine these particular levels? \
+
+_Replace this line with your answers_ 
+
+:::
+
+
+
+# Submission Details
+
+Congrats on finishing this PSTAT 100 lab! Please carry out the following steps:
+
+:::{.callout-important}
+## **Honor Statement**
+
+In writing my name below, I certify that I have cited **any** and **all** use of sources external to this class (including, but not limited to, Google Searches, knowledge from other courses, ChatGPT, etc.), and I understand that failure to do so will be treated as Academic Misconduct. \
+
+_Replace this line with YOUR FULL NAME_ 
+
+\
+
+**Sources Used:**
+
+-   Add any sources you used here.
+
+:::
+
+
+
+
+
+# Submission Details
+
+Congrats on finishing this PSTAT 100 lab! Please carry out the following steps:
+
+:::{.callout-note}
+## **Submission Details**
+
+1)    Check that all of your tables, plots, and code outputs are rendering correctly in your final `.pdf`.
+
+2)    **Make sure you put your name in the honor statement above**. Submissions with no names in the honor statement section will receive a score of 0.
+
+3)    Submit **ONLY** your `.pdf` to Gradescope. Make sure to **match ALL pages to the ONE question on Gradescope**; failure to do so will incur a penalty of 0.1 points.
+:::
+
+
